@@ -695,10 +695,12 @@ get_terminal_size :: () -> width: int, height: int {
     
     auto_release_temp();
     
+    rows, columns: int = ---;
+
     flush_input();
     write_string(Commands.QueryWindowSizeInChars);
-    
-    rows, columns: int = ---;
+
+    // Wait a bit for a response to QueryWindowSizeInChars...
     if OS_wait_for_input(1) {
 
         // Expected response format: \e[8;<r>;<c>t
@@ -706,15 +708,9 @@ get_terminal_size :: () -> width: int, height: int {
         FORMAT :: "\e[8;<r>;<c>t";
         input := read_input(64, #char "t",, allocator = temporary_allocator);
 
-        // Discard head noise.
-        while input.count >= 3 && (input[0] != FORMAT[0] || input[1] != FORMAT[1] || input[2] != FORMAT[2]) {
-            advance(*input);
-        }
-
-        // Discard tail noise.
-        while input.count >= 3 && input[input.count-1] != FORMAT[FORMAT.count-1] {
-            input.count -= 1;
-        }
+        // Discard head noise, assuming that the response is at the end of the input (because we used a terminator character during read).
+        start_idx := find_index_from_right(input, #char "\e");
+        if start_idx > 0 then advance(*input, start_idx);
         
         assert(input.count >= 3 &&
             input[0] == FORMAT[0] && input[1] == FORMAT[1] && input[2] == FORMAT[2] && input[input.count-1] == FORMAT[FORMAT.count-1],
@@ -763,20 +759,14 @@ get_cursor_position :: () -> x: int, y: int {
     FORMAT :: "\e[<r>;<c>R";
     input := read_input(64, #char "R",, allocator = temporary_allocator);
     
-    // Discard head noise.
-    while input.count >= 2 && (input[0] != FORMAT[0] || input[1] != FORMAT[1]) {
-        advance(*input);
-    }
-
-    // Discard tail noise.
-    while input.count >= 2 && input[input.count-1] != FORMAT[FORMAT.count-1] {
-        input.count -= 1;
-    }
+    // Discard head noise, assuming that the response is at the end of the input (because we used a terminator character during read).
+    start_idx := find_index_from_right(input, #char "\e");
+    if start_idx > 0 then advance(*input, start_idx);
     
     assert(input.count >= 2 &&
         input[0] == FORMAT[0] && input[1] == FORMAT[1] && input[input.count-1] == FORMAT[FORMAT.count-1],
         "Failed to query cursor position: invalid response.");
-    
+
     advance(*input, 2);
     parts := split(input, ";",, allocator = temporary_allocator);
     row := parse_int(*parts[0]);
