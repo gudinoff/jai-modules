@@ -207,7 +207,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 resize_handler :: (signal_code : s32) #c_call {
-    new_context : Context;
+    new_context : #Context;
 	push_context new_context {
 	    if signal_code != SIGWINCH then return;
 	    atomic_swap(*was_resized, true);
