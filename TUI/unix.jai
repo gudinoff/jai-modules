@@ -4,6 +4,16 @@
 #import "System";
 #import "POSIX";
 
+    #if OS == {
+        case .LINUX;
+        TCFLAG_T    :: u32;
+        SPEED_T     :: u32;
+
+        case .MACOS;
+        TCFLAG_T    :: u64;
+        SPEED_T     :: u64;
+    }
+
     // Queue selector used in tcflush(...).
     // LINUX : https://sourceware.org/git/glibc.git -> ./sysdeps/unix/sysv/linux/bits/termios-struct.h
     // MACOS : https://opensource.apple.com/source/xnu/xnu-792/bsd/sys/termios.h.auto.html
@@ -29,7 +39,7 @@
         TCSADRAIN       :: 1;   // Change when pending output is written.
         TCSAFLUSH       :: 2;   // Flush pending input before changing.
     }
-    
+
     // Terminal control (struct termios).
     // LINUX : https://sourceware.org/git/glibc.git -> ./sysdeps/unix/sysv/linux/bits/termios-struct.h
     // MACOS : https://opensource.apple.com/source/xnu/xnu-792/bsd/sys/termios.h.auto.html
@@ -47,16 +57,18 @@
         c_oflag     : Output_Modes;         // Output mode flags.
         c_cflag     : Control_Modes;        // Control modes flags.
         c_lflag     : Local_Modes;          // Local modes flags.
-        c_line      : u8;                   // Line discipline.
+        #if OS == .LINUX {
+            c_line      : u8;                   // Line discipline.
+        }
         c_cc        : [NCCS]Control_Chars;  // Control characters.
-        c_ispeed    : u32;                  // Input speed (baud rates).
-        c_ospeed    : u32;                  // Output speed (baud rates).
+        c_ispeed    : SPEED_T;              // Input speed (baud rates).
+        c_ospeed    : SPEED_T;              // Output speed (baud rates).
     }
     
     // Input modes.
     // LINUX : https://sourceware.org/git/glibc.git -> ./sysdeps/unix/sysv/linux/bits/termios-c_iflag.h
     // MACOS : https://opensource.apple.com/source/xnu/xnu-792/bsd/sys/termios.h.auto.html
-    Input_Modes :: enum_flags u32 {
+    Input_Modes :: enum_flags TCFLAG_T {
         IGNBRK          :: 0x00000001;     // Ignore break condition.
         BRKINT          :: 0x00000002;     // Signal interrupt on break.
         IGNPAR          :: 0x00000004;     // Ignore characters with parity errors.
@@ -84,7 +96,7 @@
     // Output modes.
     // LINUX : https://sourceware.org/git/glibc.git -> ./sysdeps/unix/sysv/linux/bits/termios-c_oflag.h
     // MACOS : https://opensource.apple.com/source/xnu/xnu-792/bsd/sys/termios.h.auto.html
-    Output_Modes :: enum_flags u32 {
+    Output_Modes :: enum_flags TCFLAG_T {
         #if OS == {
         
             case .LINUX;
@@ -108,7 +120,7 @@
     // Control modes.
     // LINUX : https://sourceware.org/git/glibc.git -> ./sysdeps/unix/sysv/linux/bits/termios-c_cflag.h
     // MACOS : https://opensource.apple.com/source/xnu/xnu-792/bsd/sys/termios.h.auto.html
-    Control_Modes :: enum u32 {
+    Control_Modes :: enum TCFLAG_T {
         #if OS == {
 
             case .LINUX;
@@ -142,7 +154,7 @@
     // Local modes.
     // LINUX : https://sourceware.org/git/glibc.git -> ./sysdeps/unix/sysv/linux/bits/termios-c_lflag.h
     // MACOS : https://opensource.apple.com/source/xnu/xnu-792/bsd/sys/termios.h.auto.html
-    Local_Modes :: enum_flags u32 {
+    Local_Modes :: enum_flags TCFLAG_T {
         #if OS == {
 
             case .LINUX;
