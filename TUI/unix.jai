@@ -4,6 +4,10 @@
 #import "System";
 #import "POSIX";
 
+    // More info about the structs and enums at:
+    // LINUX : https://sourceware.org/git/glibc.git
+    // MACOS : https://github.com/apple/darwin-xnu
+
     #if OS == {
         case .LINUX;
         TCFLAG_T    :: u32;
@@ -15,8 +19,6 @@
     }
 
     // Queue selector used in tcflush(...).
-    // LINUX : https://sourceware.org/git/glibc.git -> ./sysdeps/unix/sysv/linux/bits/termios-struct.h
-    // MACOS : https://opensource.apple.com/source/xnu/xnu-792/bsd/sys/termios.h.auto.html
     Queue_Selector :: enum s32 {
         #if OS == {
             case .LINUX;
@@ -32,8 +34,6 @@
     }
 
     // Optional actions used in tcsetattr(...).
-    // LINUX : https://sourceware.org/git/glibc.git -> ./sysdeps/unix/sysv/linux/bits/termios-tcflow.h
-    // MACOS : https://opensource.apple.com/source/xnu/xnu-792/bsd/sys/termios.h.auto.html
     Optional_Actions :: enum s32 {
         TCSANOW         :: 0;   // Change immediately.
         TCSADRAIN       :: 1;   // Change when pending output is written.
@@ -41,8 +41,6 @@
     }
 
     // Terminal control (struct termios).
-    // LINUX : https://sourceware.org/git/glibc.git -> ./sysdeps/unix/sysv/linux/bits/termios-struct.h
-    // MACOS : https://opensource.apple.com/source/xnu/xnu-792/bsd/sys/termios.h.auto.html
     Terminal_IO_Mode :: struct {
 
         #if OS == {
@@ -66,8 +64,6 @@
     }
     
     // Input modes.
-    // LINUX : https://sourceware.org/git/glibc.git -> ./sysdeps/unix/sysv/linux/bits/termios-c_iflag.h
-    // MACOS : https://opensource.apple.com/source/xnu/xnu-792/bsd/sys/termios.h.auto.html
     Input_Modes :: enum_flags TCFLAG_T {
         IGNBRK          :: 0x00000001;     // Ignore break condition.
         BRKINT          :: 0x00000002;     // Signal interrupt on break.
@@ -94,8 +90,6 @@
     }
     
     // Output modes.
-    // LINUX : https://sourceware.org/git/glibc.git -> ./sysdeps/unix/sysv/linux/bits/termios-c_oflag.h
-    // MACOS : https://opensource.apple.com/source/xnu/xnu-792/bsd/sys/termios.h.auto.html
     Output_Modes :: enum_flags TCFLAG_T {
         #if OS == {
         
@@ -118,8 +112,6 @@
     }
     
     // Control modes.
-    // LINUX : https://sourceware.org/git/glibc.git -> ./sysdeps/unix/sysv/linux/bits/termios-c_cflag.h
-    // MACOS : https://opensource.apple.com/source/xnu/xnu-792/bsd/sys/termios.h.auto.html
     Control_Modes :: enum TCFLAG_T {
         #if OS == {
 
@@ -152,8 +144,6 @@
     }
     
     // Local modes.
-    // LINUX : https://sourceware.org/git/glibc.git -> ./sysdeps/unix/sysv/linux/bits/termios-c_lflag.h
-    // MACOS : https://opensource.apple.com/source/xnu/xnu-792/bsd/sys/termios.h.auto.html
     Local_Modes :: enum_flags TCFLAG_T {
         #if OS == {
 
@@ -182,8 +172,6 @@
     }
 
     // Control Characters
-    // LINUX : https://sourceware.org/git/glibc.git -> ./sysdeps/unix/sysv/linux/bits/termios-c_cc.h
-    // MACOS : https://opensource.apple.com/source/xnu/xnu-792/bsd/sys/termios.h.auto.html
     Control_Chars :: enum u8 {
         // Unused consts:
         // VINTR, VQUIT, VERASE, VKILL, VEOF, VSWTC, VSTART, VSTOP, VSUSP, VEOL, VREPRINT, VDISCARD, VWERASE, VLNEXT, VEOL2
