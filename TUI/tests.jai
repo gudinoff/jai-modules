@@ -10,7 +10,7 @@ main :: () {
         }
         else {
             assert(TUI.reset_terminal(), "Failed to reset TUI.");
-            print("- ERROR: %", error_message, to_standard_error = true);
+            print("- ERROR: %\n", error_message, to_standard_error = true);
             exit(1);
         }
     }
@@ -19,7 +19,7 @@ main :: () {
         x, y := TUI.get_cursor_position();
         TUI.set_cursor_position(1, y+1);
     }
-
+    
     if 1 {
         print("TEST : set and get cursor position\n", to_standard_error = true);
         assert(TUI.setup_terminal(), "Failed to setup TUI.");
@@ -157,12 +157,9 @@ main :: () {
             TUI.set_cursor_position(x, y);
             print("size = %x%\n", width, height);
             key = TUI.get_key(1000);
-
-            // __mark := get_temporary_storage_mark();
-            // set_temporary_storage_mark(__mark);
         }
-        print("- success");
         assert(TUI.reset_terminal(), "Failed to reset TUI.");
+        assert_result(true, "");
     }
 
     if 1 {

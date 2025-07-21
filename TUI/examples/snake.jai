@@ -124,7 +124,7 @@ game_loop :: () {
         last_pos := snake_parts[snake_parts.count-1];
 
         // Update snake position.
-        for < snake_parts.count-1..1 {
+        for #v2 < 1..snake_parts.count-1 {
             if snake_parts[it] != snake_parts[it-1] {
                 snake_parts[it] = snake_parts[it-1];
             }

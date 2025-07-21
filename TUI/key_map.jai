@@ -11,6 +11,8 @@ setup_key_map :: () {
 
     if key_map.count > 0 then return;
 
+    init(*key_map);
+
     /*
         This table was created/tested using the following terminals:
         - g: gnome terminal

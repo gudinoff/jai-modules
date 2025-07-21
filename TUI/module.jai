@@ -609,7 +609,7 @@ read_input_line :: (count_limit: int, is_visible: bool = true) -> string, Key {
                 if buff_idx > count_limit - key_str.count then continue;
 
                 // Move text to allow inserting new character.
-                for < count_limit-1..buff_idx + key_str.count-1 {
+                for #v2 < buff_idx + key_str.count-1..count_limit-1 {
                     str.data[it] = str.data[it-key_str.count];
                 }
                 
