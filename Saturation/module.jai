@@ -72,48 +72,25 @@ add :: (x: $Tx, y: $Ty, $prefer_branch_free_code := PREFER_BRANCH_FREE_CODE) -> 
         result: Tr = ---;
         saturated: bool = ---;
         
+        SIGNED      :: #run (cast(*Type_Info_Integer)Tr).signed;
+        SIZE        :: size_of(Tr) * 8;
+        SIGN_BIT    :: SIZE-1;
         
-        ADD_SIGNED_ASM :: #string DONE
-        #asm {        
+        #if SIGNED #asm {
             mov         result, -1;             // Pre-set result with signed maximum (set all bits...
-            shr.SIZE    result, 1;              // ...then, clear MSB).
+            shr?SIZE    result, 1;              // ...then, clear MSB).
             bt          x, SIGN_BIT;            // Test sign bit (affect CF).
             adc         result, 0;              // Overflow signed maximum to signed minimum if CF is set.
             
-            add.SIZE    x, y;                   // Add values (affect OF).
+            add?SIZE    x, y;                   // Add values (affect OF).
             seto        saturated;              // Set saturated flag if OF.
             cmovno      result, x;              // Move add-result to result if NOT OF.
-        }
-        DONE
-        
-        #if Tr == s8
-            #insert #run replace(replace(ADD_SIGNED_ASM, ".SIZE", ".b"), "SIGN_BIT", "7");
-        #if Tr == s16
-            #insert #run replace(replace(ADD_SIGNED_ASM, ".SIZE", ".w"), "SIGN_BIT", "15");
-        #if Tr == s32
-            #insert #run replace(replace(ADD_SIGNED_ASM, ".SIZE", ".d"), "SIGN_BIT", "31");
-        #if Tr == s64
-            #insert #run replace(replace(ADD_SIGNED_ASM, ".SIZE", ".q"), "SIGN_BIT", "63");
-        
-        
-        ADD_UNSIGNED_ASM :: #string DONE
-        #asm {
+        } else #asm {
             mov         result, -1;             // Pre-set result with unsigned maximum.
-            add.SIZE    x, y;                   // Add values (affect CF).
+            add?SIZE    x, y;                   // Add values (affect CF).
             setc        saturated;              // Set saturated flag if CF.
             cmovnc      result, x;              // Move add-result to result if NOT CF.
         }
-        DONE
-        
-        #if Tr == u8
-            #insert #run replace(ADD_UNSIGNED_ASM, ".SIZE", ".b");
-        #if Tr == u16
-            #insert #run replace(ADD_UNSIGNED_ASM, ".SIZE", ".w");
-        #if Tr == u32
-            #insert #run replace(ADD_UNSIGNED_ASM, ".SIZE", ".d");
-        #if Tr == u64
-            #insert #run replace(ADD_UNSIGNED_ASM, ".SIZE", ".q");
-        
         
         return result, saturated;
         
@@ -148,53 +125,29 @@ sub :: (x: $Tx, y: $Ty, $prefer_branch_free_code := PREFER_BRANCH_FREE_CODE) -> 
         result: Tr = ---;
         saturated: bool = ---;
         
+        SIGNED      :: #run (cast(*Type_Info_Integer)Tr).signed;
+        SIZE        :: size_of(Tr) * 8;
+        SIGN_BIT    :: SIZE-1;
         
-        SUB_SIGNED_ASM :: #string DONE
-        #asm {
+        #if SIGNED #asm {
             mov         result, -1;             // Pre-set result with signed maximum (set all bits...
-            shr.SIZE    result, 1;              // ...then, clear MSB).
+            shr?SIZE    result, 1;              // ...then, clear MSB).
             bt          x, SIGN_BIT;            // Test signal bit (affect CF).
             adc         result, 0;              // Overflow signed maximum to signed minimum if CF is set.
             
-            sub.SIZE    x, y;                   // Subtract values (affect OF).
+            sub?SIZE    x, y;                   // Subtract values (affect OF).
             seto        saturated;              // Set saturated flag if OF.
             cmovno      result, x;              // Move subtract-result to result if NOT OF.
-        }
-        DONE
-
-        #if Tr == s8
-            #insert #run replace(replace(SUB_SIGNED_ASM, ".SIZE", ".b"), "SIGN_BIT", "7");
-        #if Tr == s16
-            #insert #run replace(replace(SUB_SIGNED_ASM, ".SIZE", ".w"), "SIGN_BIT", "15");
-        #if Tr == s32
-            #insert #run replace(replace(SUB_SIGNED_ASM, ".SIZE", ".d"), "SIGN_BIT", "31");
-        #if Tr == s64
-            #insert #run replace(replace(SUB_SIGNED_ASM, ".SIZE", ".q"), "SIGN_BIT", "63");
-
-
-        SUB_UNSIGNED_ASM :: #string DONE
-        #asm {
+        } else #asm {
             xor         result, result;         // Pre-set result with usigned minimum (zero).
-            sub.SIZE    x, y;                   // Subtract values (affect CF).
+            sub?SIZE    x, y;                   // Subtract values (affect CF).
             setc        saturated;              // Set saturated flag if CF.
             cmovnc      result, x;              // Move subtract-result to result if NOT CF.
         }
-        DONE
-
-        #if Tr == u8
-            #insert #run replace(SUB_UNSIGNED_ASM, ".SIZE", ".b");
-        #if Tr == u16
-            #insert #run replace(SUB_UNSIGNED_ASM, ".SIZE", ".w");
-        #if Tr == u32
-            #insert #run replace(SUB_UNSIGNED_ASM, ".SIZE", ".d");
-        #if Tr == u64
-            #insert #run replace(SUB_UNSIGNED_ASM, ".SIZE", ".q");
-
-
+        
         return result, saturated;
-
+        
     }
-
 }
 
 mul :: (x: $Tx, y: $Ty, $prefer_branch_free_code := PREFER_BRANCH_FREE_CODE) -> result: $Tr, saturated: bool #modify { #insert INTEGER_ARITHMETIC_TYPES_CHECK; }
@@ -233,55 +186,44 @@ mul :: (x: $Tx, y: $Ty, $prefer_branch_free_code := PREFER_BRANCH_FREE_CODE) -> 
         result: Tr = ---;
         saturated: bool = ---;
         
-        MUL_SIGNED_ASM :: #string DONE
-        #asm {
+        SIGNED      :: #run (cast(*Type_Info_Integer)Tr).signed;
+        SIZE        :: size_of(Tr) * 8;
+        SIGN_BIT    :: SIZE-1;
+        
+        #if SIGNED #asm {
             // Using two copies of the x value (x_, sign) seems to be a bit faster (not sure why).
             mov         x_: gpr === a, x;       // Pin copy of x value to register A.
             
             mov         result, -1;             // Pre-set result with signed maximum (set all bits...
-            shr.SIZE    result, 1;              // ...then, clear MSB).
+            shr?SIZE    result, 1;              // ...then, clear MSB).
             mov         sign:, x;               // Use copy of x value.
             xor         sign, y;                // Calculate result signal bit using xor.
             bt          sign, SIGN_BIT;         // Test signal bit (affect CF).
             adc         result, 0;              // Overflow signed maximum to signed minimum if CF is set.
             
-            imul.SIZE   x_, y;                  // Multiply values (affect OF).
+            imul?SIZE   x_, y;                  // Multiply values (affect OF).
             seto        saturated;              // Set saturated flag if OF.
             cmovno      result, x_;             // Move multiply-result to result if NOT OF.
-        }
-        DONE
+        
+        } else #if SIZE == 8 #asm {
+            result === a;                       // Pin result to register A.
 
-        #if Tr == s8
-            #insert #run replace(replace(MUL_SIGNED_ASM, ".SIZE", ".b"), "SIGN_BIT", "7");
-        #if Tr == s16
-            #insert #run replace(replace(MUL_SIGNED_ASM, ".SIZE", ".w"), "SIGN_BIT", "15");
-        #if Tr == s32
-            #insert #run replace(replace(MUL_SIGNED_ASM, ".SIZE", ".d"), "SIGN_BIT", "31");
-        #if Tr == s64
-            #insert #run replace(replace(MUL_SIGNED_ASM, ".SIZE", ".q"), "SIGN_BIT", "63");
-
-
-        MUL_UNSIGNED_ASM :: #string DONE
-        #asm {
+            mov         result, x;              // Move value x to result.
+            // For 8bits mul, we do not need D register (as in the else below).
+            mul?SIZE    result, y;      // Multiply values (affect CF).
+            setc        saturated;              // Set saturated flag if CF.
+            sbb         mask:, mask;            // If CF: mask = -1 (all bits set); else: mask = 0.
+            or          result, mask;           // If CF was set, then result will be set to unsigned maximum (all bits set).
+        
+        } else #asm {
             result === a;                       // Pin result to register A.
             
             mov         result, x;              // Move value x to result.
-            mul.SIZE    reg_d:, result, y;      // Multiply values (affect CF).
+            mul?SIZE    reg_d:, result, y;      // Multiply values (affect CF).
             setc        saturated;              // Set saturated flag if CF.
             sbb         mask:, mask;            // If CF: mask = -1 (all bits set); else: mask = 0.
             or          result, mask;           // If CF was set, then result will be set to unsigned maximum (all bits set).
         }
-        DONE
-        
-        #if Tr == u8
-            #insert #run replace(replace(MUL_UNSIGNED_ASM, ".SIZE", ".b"), "reg_d:,", ""); // For 8bits mul, we do not need D register.
-        #if Tr == u16
-            #insert #run replace(MUL_UNSIGNED_ASM, ".SIZE", ".w");
-        #if Tr == u32
-            #insert #run replace(MUL_UNSIGNED_ASM, ".SIZE", ".d");
-        #if Tr == u64
-            #insert #run replace(MUL_UNSIGNED_ASM, ".SIZE", ".q");
-        
         
         return result, saturated;
         
@@ -313,6 +255,8 @@ div :: (x: $Tx, y: $Ty, $prefer_branch_free_code := PREFER_BRANCH_FREE_CODE) -> 
         result: Tr = ---;
         remainder: Tr = ---;
         saturated: bool = ---;
+
+        SIZE        :: size_of(Tr) * 8;
         
         DIV_SIGNED_ASM :: #string DONE
         #asm {
@@ -323,18 +267,18 @@ div :: (x: $Tx, y: $Ty, $prefer_branch_free_code := PREFER_BRANCH_FREE_CODE) -> 
             
             // Detect div(MIN/-1) and flag it on ZF.
             mov         t_dividend:, -1;        // Pre-set t_dividend with signed minimum (set all bits...
-            shr.SIZE    t_dividend, 1;          // ...then, clear MSB...
+            shr?SIZE    t_dividend, 1;          // ...then, clear MSB...
             not         t_dividend;             // ...then, negate to obtain MSB set and all other bits cleared).
             //
             mov         limit:, t_dividend;     // Keep copy of signed minimum on limit.
             add         limit, 1;               // Set limit as signed minimum + 1.
             //
-            xor.SIZE    t_dividend, x;          // Clear dividend if x value is equal to signed minimum.
+            xor?SIZE    t_dividend, x;          // Clear dividend if x value is equal to signed minimum.
             //
             mov         t_divisor:, -1;         // Pre-set test_divisor with -1.
-            xor.SIZE    t_divisor, y;           // Clear test_divisor if y value is equal to -1.
+            xor?SIZE    t_divisor, y;           // Clear test_divisor if y value is equal to -1.
             //
-            or.SIZE     t_dividend, t_divisor;  // Or t_dividend with t_divisor (affect ZF).
+            or?SIZE     t_dividend, t_divisor;  // Or t_dividend with t_divisor (affect ZF).
             
             setz        saturated;              // Set saturated flag if ZF.
             mov         result, x;              // Copy x value to result (dividend).
@@ -342,40 +286,40 @@ div :: (x: $Tx, y: $Ty, $prefer_branch_free_code := PREFER_BRANCH_FREE_CODE) -> 
             
             DIVIDE_PLACEHOLDER
             
-            sub.SIZE    remainder, saturated;   // If saturated: remainder = 0 - 1; otherwise: remainder = x - 0.
+            sub?SIZE    remainder, saturated;   // If saturated: remainder = 0 - 1; otherwise: remainder = x - 0.
         }
         DONE
 
         DIV_SIGNED_CALC_8BITS :: #string DONE
             cbw         result;                 // Prepare dividend high bits (sign-extend).
-            idiv.SIZE   result, y;              // Divide values.
+            idiv?SIZE   result, y;              // Divide values.
             mov         remainder, result;      // Extract remainder from result's high bits.
             sar         remainder, 8;           // Shift remainder from high to low bits.
         DONE
 
         DIV_SIGNED_CALC_16BITS :: #string DONE
             cwd         remainder, result;      // Prepare dividend high bits (sign-extend).
-            idiv.SIZE   remainder, result, y;   // Divide values.
+            idiv?SIZE   remainder, result, y;   // Divide values.
         DONE
 
         DIV_SIGNED_CALC_32BITS :: #string DONE
             cdq         remainder, result;      // Prepare dividend high bits (sign-extend).
-            idiv.SIZE   remainder, result, y;   // Divide values.
+            idiv?SIZE   remainder, result, y;   // Divide values.
         DONE
 
         DIV_SIGNED_CALC_64BITS :: #string DONE
             cqo         remainder, result;      // Prepare dividend high bits (sign-extend).
-            idiv.SIZE   remainder, result, y;   // Divide values.
+            idiv?SIZE   remainder, result, y;   // Divide values.
         DONE
         
         #if Tr == s8
-            #insert #run replace(replace(DIV_SIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_SIGNED_CALC_8BITS), ".SIZE", ".b");
+            #insert #run replace(DIV_SIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_SIGNED_CALC_8BITS);
         #if Tr == s16
-            #insert #run replace(replace(DIV_SIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_SIGNED_CALC_16BITS), ".SIZE", ".w");
+            #insert #run replace(DIV_SIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_SIGNED_CALC_16BITS);
         #if Tr == s32
-            #insert #run replace(replace(DIV_SIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_SIGNED_CALC_32BITS), ".SIZE", ".d");
+            #insert #run replace(DIV_SIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_SIGNED_CALC_32BITS);
         #if Tr == s64
-            #insert #run replace(replace(DIV_SIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_SIGNED_CALC_64BITS), ".SIZE", ".q");
+            #insert #run replace(DIV_SIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_SIGNED_CALC_64BITS);
         
         
         DIV_UNSIGNED_ASM :: #string DONE
@@ -386,30 +330,30 @@ div :: (x: $Tx, y: $Ty, $prefer_branch_free_code := PREFER_BRANCH_FREE_CODE) -> 
             xor         result, result;         // Clear result.
             xor         remainder, remainder;   // Clear remainder (required when used as dividend's high bits).
             xor         saturated, saturated;   // Clear saturated (unsigned division never saturates).
-            mov.SIZE    result, x;              // Copy x value to result.
+            mov?SIZE    result, x;              // Copy x value to result.
 
             DIVIDE_PLACEHOLDER
         }
         DONE
 
         DIV_UNSIGNED_CALC_8BITS :: #string DONE
-            div.SIZE    result, y;              // Divide values.
+            div?SIZE    result, y;              // Divide values.
             mov         remainder, result;      // Extract remainder from result's high bits.
             sar         remainder, 8;           // Shift remainder from high to low bits.
         DONE
         
         DIV_UNSIGNED_CALC :: #string DONE
-            div.SIZE    remainder, result, y;   // Divide values.
+            div?SIZE    remainder, result, y;   // Divide values.
         DONE
         
         #if Tr == u8
-            #insert #run replace(replace(DIV_UNSIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_UNSIGNED_CALC_8BITS), ".SIZE", ".b");
+            #insert #run replace(DIV_UNSIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_UNSIGNED_CALC_8BITS);
         #if Tr == u16
-            #insert #run replace(replace(DIV_UNSIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_UNSIGNED_CALC), ".SIZE", ".w");
+            #insert #run replace(DIV_UNSIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_UNSIGNED_CALC);
         #if Tr == u32
-            #insert #run replace(replace(DIV_UNSIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_UNSIGNED_CALC), ".SIZE", ".d");
+            #insert #run replace(DIV_UNSIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_UNSIGNED_CALC);
         #if Tr == u64
-            #insert #run replace(replace(DIV_UNSIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_UNSIGNED_CALC), ".SIZE", ".q");
+            #insert #run replace(DIV_UNSIGNED_ASM, "DIVIDE_PLACEHOLDER", DIV_UNSIGNED_CALC);
         
         
         return result, remainder, saturated;

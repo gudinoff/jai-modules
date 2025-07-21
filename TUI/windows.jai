@@ -292,7 +292,7 @@ OS_read_input :: (buffer: *u8, bytes_to_read: s64) -> bytes_read: s64, success :
                         return 0, false;
                     }
                     
-                    result:, success = wide_to_utf8_new(widechar_view.data, xx widechar_view.count);
+                    result:, success = wide_to_utf8(widechar_view.data, xx widechar_view.count);
                     if success == false {
                         error_code, error_string := get_error_value_and_string();
                         log_tui_error("Failed to convert from wide to UTF8: code %, %", error_code, error_string);
